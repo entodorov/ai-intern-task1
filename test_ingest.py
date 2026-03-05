@@ -21,7 +21,7 @@ class TestIngestion(unittest.TestCase):
         self.assertIn("Това е тестова среща.", extracted_text)
         self.assertIn("Обсъждаме изкуствен интелект.", extracted_text)
         
-        print("\n✅ ТЕСТЪТ МИНА УСПЕШНО! Функцията read_docx работи перфектно.")
+        print("\n ТЕСТЪТ МИНА УСПЕШНО! Функцията read_docx работи перфектно.")
 
     def tearDown(self):
         """Тази функция се пуска СЛЕД теста. Тук изтриваме фалшивия файл."""
