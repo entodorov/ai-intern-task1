@@ -6,6 +6,7 @@ from supabase import create_client, Client
 from pydantic import BaseModel, Field
 from typing import List, Optional
 from langchain_google_genai import ChatGoogleGenerativeAI
+from tqdm import tqdm
 
 load_dotenv()
 supabase: Client = create_client(os.environ.get("SUPABASE_URL"), os.environ.get("SUPABASE_KEY"))
@@ -35,7 +36,7 @@ def generate_with_langchain(transcript_text):
     """Генерира бележки, използвайки LangChain и Pydantic за структуриран изход."""
     
     if len(transcript_text.split()) < 10:
-        print("  ⚠️ Текстът е твърде къс за анализ.")
+        print("Текстът е твърде къс за анализ.")
         return None, "Твърде къс текст"
 
     prompt = f"Read the following meeting transcript and generate structured meeting notes.\n\nTranscript:\n{transcript_text}"
@@ -63,7 +64,7 @@ def generate_with_langchain(transcript_text):
 def process_meeting(meeting):
     meeting_id = meeting['id']
     title = meeting['title']
-    print(f"\nОбработвам среща с LangChain: {title} (ID: {meeting_id})")
+    #print(f"\nОбработвам среща с LangChain: {title} (ID: {meeting_id})")
     
     try:
         chunks = json.loads(meeting['raw_transcript'])
@@ -86,9 +87,9 @@ def process_meeting(meeting):
         }
         
         supabase.table("notes").insert(note_data).execute()
-        print(f"Успешно генерирани и записани бележки чрез LangChain!")
+        tqdm.write(f"Успешно генерирани и записани бележки чрез LangChain!")
     else:
-        print(f"Пропускане на запис поради грешка.")
+        tqdm.write(f"Пропускане на запис поради грешка.")
 
 def main():
     parser = argparse.ArgumentParser()
@@ -110,7 +111,7 @@ def main():
             return
 
     print(f"Намерени {len(meetings_to_process)} срещи за обработка.")
-    for meeting in meetings_to_process:
+    for meeting in tqdm(meetings_to_process, desc="LangChain AI", unit="среща"):
         process_meeting(meeting)
 
 if __name__ == "__main__":

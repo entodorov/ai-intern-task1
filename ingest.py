@@ -4,6 +4,7 @@ from datetime import datetime
 from dotenv import load_dotenv
 from supabase import create_client, Client
 import docx
+from tqdm import tqdm
 
 load_dotenv()
 url: str = os.environ.get("SUPABASE_URL")
@@ -46,29 +47,29 @@ def read_docx(file_path):
 def main():
     data_dir = 'data'
     if not os.path.exists(data_dir):
-        print(f"Папката {data_dir} не беше намерена.")
+        tqdm.write(f"Папката {data_dir} не беше намерена.")
         return
 
     for project_folder in os.listdir(data_dir):
         project_path = os.path.join(data_dir, project_folder)
         
         if os.path.isdir(project_path):
-            print(f"\nПроверявам проект: {project_folder}...")
+            tqdm.write(f"\nПроверявам проект: {project_folder}...")
             
-            for filename in os.listdir(project_path):
+            for filename in tqdm(os.listdir(project_path),desc=f"Четене: {project_folder}", unit="файл"):
                 if filename.endswith('.docx'):
                     file_path = os.path.join(project_path, filename)
                     title = filename.replace('.docx', '')
                     
                     existing = supabase.table("meetings").select("id").eq("title", title).execute()
                     if len(existing.data) > 0:
-                        print(f"ПРОПУСКАНЕ: '{title}' вече съществува в базата.")
+                        tqdm.write(f"ПРОПУСКАНЕ: '{title}' вече съществува в базата.")
                         continue
                     
                     raw_transcript = read_docx(file_path)
                     
                     chunks = chunk_text(raw_transcript, chunk_size=1500)
-                    print(f"Текстът е нарязан на {len(chunks)} AI парчета (chunks).")
+                    tqdm.write(f"Текстът е нарязан на {len(chunks)} AI парчета (chunks).")
                     
                     transcript_json = json.dumps(chunks, ensure_ascii=False)
                     
@@ -84,9 +85,9 @@ def main():
                     
                     try:
                         supabase.table("meetings").insert(meeting_data).execute()
-                        print(f"Успешно добавена нова среща: {title}")
+                        tqdm.write(f"Успешно добавена нова среща: {title}")
                     except Exception as e:
-                        print(f"Проблем със записването на {title}: {e}")
+                        tqdm.write(f"Проблем със записването на {title}: {e}")
 
 if __name__ == "__main__":
     main()

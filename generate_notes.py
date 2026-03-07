@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from supabase import create_client, Client
 from google import genai
 import time
+from tqdm import tqdm
 
 load_dotenv()
 supabase: Client = create_client(os.environ.get("SUPABASE_URL"), os.environ.get("SUPABASE_KEY"))
@@ -89,7 +90,7 @@ def generate_structured_notes(transcript_text):
 def process_meeting(meeting):
     meeting_id = meeting['id']
     title = meeting['title']
-    print(f"\nОбработвам среща: {title} (ID: {meeting_id})")
+    #print(f"\nОбработвам среща: {title} (ID: {meeting_id})")
     
     try:
         chunks = json.loads(meeting['raw_transcript'])
@@ -112,9 +113,9 @@ def process_meeting(meeting):
         }
         
         supabase.table("notes").insert(note_data).execute()
-        print(f"Успешно генерирани и записани бележки за: {title}!")
+        tqdm.write(f"Успешно генерирани и записани бележки за: {title}!")
     else:
-        print(f"Пропускане на запис поради грешка в AI генерирането.")
+        tqdm.write(f"Пропускане на запис поради грешка в AI генерирането.")
 
 def main():
     parser = argparse.ArgumentParser()
@@ -136,7 +137,7 @@ def main():
             return
 
     print(f"Намерени {len(meetings_to_process)} срещи за обработка.")
-    for meeting in meetings_to_process:
+    for meeting in tqdm(meetings_to_process, desc="Генериране на бележки", unit="среща"):
         process_meeting(meeting)
 
 if __name__ == "__main__":
